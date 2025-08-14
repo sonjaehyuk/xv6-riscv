@@ -14,7 +14,7 @@ main()
     consoleinit();
     printfinit();
     printf("\n");
-    printf("xv6 kernel is booting\n");
+    printf("xv6 커널을 시작하고 있습니다.\n");
     printf("\n");
     kinit();         // physical page allocator
     kvminit();       // create kernel page table
