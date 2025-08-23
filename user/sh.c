@@ -134,8 +134,8 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
-  write(2, "$ ", 2);
-  memset(buf, 0, nbuf);
+  write(2, "$ ", 2); // STDOUT에 셸 기본 출력($ )을 수행
+  memset(buf, 0, nbuf); // 버퍼 비우기
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
     return -1;
@@ -158,20 +158,22 @@ main(void)
 
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
+    // 셸 구문 추출
     char *cmd = buf;
     while (*cmd == ' ' || *cmd == '\t')
       cmd++;
     if (*cmd == '\n') // is a blank command
       continue;
+
     if(cmd[0] == 'c' && cmd[1] == 'd' && cmd[2] == ' '){
       // Chdir must be called by the parent, not the child.
       cmd[strlen(cmd)-1] = 0;  // chop \n
       if(chdir(cmd+3) < 0)
         fprintf(2, "cannot cd %s\n", cmd+3);
     } else {
-      if(fork1() == 0)
+      if(fork1() == 0) // 내가 자식이면:
         runcmd(parsecmd(cmd));
-      wait(0);
+      wait(0); // 자식 아니면 기다림.
     }
   }
   exit(0);
