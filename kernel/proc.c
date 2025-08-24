@@ -224,7 +224,7 @@ userinit(void)
   p = allocproc();
   initproc = p;
   
-  p->cwd = namei("/");
+  p->cwd = namei("/"); // 루트 경로의 inode 가져와서 현재 작업 디렉토리로 지정.
 
   p->state = RUNNABLE;
 

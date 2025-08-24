@@ -46,6 +46,49 @@ fork/exec가 분리되어 있어야 I/O 전환이 쉬워진다.
 과제
 : pipe 쌍을 이용해 서로 바이트를 주고받는 프로그램을 작성하고, 초당 교환 성능을 측정하시오.
 
+## 챕터 2
+
+대부분의 CPU 아키텍처는 기계 명령을 machine mode, supervisor mode, user mode로 나누어서 본다. 커널의 주요 코드는 supervisor mode에서 작동한다. 반면 애플리케이션 프로세스는 user mode에 실행되며, 실행되어야 한다. 마이크로 커널의 경우 커널 역할이 user mode에서 실행될 수도 있다.
+
+| kernel/에 있는 파일 | 설명                                 |
+|----------------|------------------------------------|
+| bio.c          | 파일 시스템을 위한 디스크 블록 캐시               |
+| console.c      | 사용자 키보드와 스크린을 연결한다.                |
+| entry.S        | xv6가 처음 시작할 때 사용하는 부팅 명령           |
+| exec.c         | exec() 시스템 호출을 구현                  |
+| file.c         | FD 관련 구현                           |
+| fs.c           | 파일 시스템                             |
+| kalloc.c       | 물리 page 할당자                        |
+| kernelvec.S    | 커널의 trap을 관리하며, 타이머 인터립트 처리를 담당한다. |
+| log.c          | 크래시 복구와 파일 시스템 로그를 관리한다.           |
+| main.c         | 부팅될 때 초기화를 제어하는 역할                 |
+| pipe.c         | pipe 관련 구현                         |
+| plic.c         | RISC-V 인터럽트 관리자                    |
+| printf.c       | 콘솔에 출력할 내용을 구성하는 역할                |
+| proc.c         | 프로세스 및 스케줄링                        |
+| sleeplock.c    | CPU에 양보하는 락                        |
+| spinlock.c     | CPU에 양보하지 않는 락                     |
+| start.c        | machine mode에서 실행할 부팅 코드           |
+| string.c       | C 문자열과 바이트 배열 라이브러리                |
+| swtch.S        | 스레드 교체                             |
+| syscall.c      | 시스템 호출을 장착하는 역할                    |
+| sysfile.c      | 파일 관련 시스템 호출                       |
+| sysproc.c      | 프로세스 관련 시스템 호출                     |
+| trampoline.S   | 사용자와 커널간 어셈블리 코드 교체                |
+| trap.c         | trap과 인터럽트 반환 및 처리를 위한 C 코드        |
+| uart.c         | 시리얼 콘솔 포트 드라이버                     |
+| virtio_disk.c  | 디스크 드라이버                           |
+| vm.c           | 페이지 테이블과 주소 공간을 관리한다.              |
+
+모든 정의는 `kernel/def.h`에서도 찾을 수 있다.
+
+부팅이 시작되면, 읽기 전용 메모리에 있는 부트로더가 실행된다. 부트로더는 xv6 커널을 메모리에 적재한다. 그런다음, `kernel/entry.S`에 있는 _entry를 실행한다. qemu에서 0x80000000까지는 I/O 장치로 예약이 되어 있으므로, 커널은 0x80000000부터 시작한다. _entry는 stack0로 불리는 초기 스택을 선언하고(`kernel/start.c`), 스택 포인터를 stack0 + 4096으로 옮긴다. 이후 `kernel/start.c`의 start 함수를 호출한다. start 함수는 machine mode에서 실행하다가 mret을 호출하고 `kernel/main.c`의 main 함수를 supervisor 모드에서 실행하도록 호출한다. RISC-V 사양에 의해 전환 과정에서 다양한 정보가 레지스터에 기록된다.
+
+main 함수는 첫 프로세스를 만들기 위해 `kernel/proc.c`의 userinit 함수를 호출한다. 이렇게 만들어진 첫 프로세스(`user/init.c`)는 exec()를 호출하여 셸을 생성한다.
+
+과제
+: 사용 가능한 메모리 양을 반환하는 시스템 호출을 추가하시오.
+
 ```text
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
