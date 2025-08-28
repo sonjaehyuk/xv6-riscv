@@ -14,6 +14,7 @@ void freerange(void *pa_start, void *pa_end);
 extern char end[]; // first address after kernel.
                    // defined by kernel.ld.
 
+// 빈 페이지 목록을 연결 리스트로 저장
 struct run {
   struct run *next;
 };
@@ -23,6 +24,7 @@ struct {
   struct run *freelist;
 } kmem;
 
+// main 함수가 호출
 void
 kinit()
 {
