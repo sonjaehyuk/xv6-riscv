@@ -102,3 +102,13 @@ sys_uptime(void)
 uint64 sys_getnp(void) {
   return getnproc();
 }
+
+uint64 sys_getnice(void) {
+  int pid;
+  return getnice(pid);
+}
+
+uint64 sys_setnice(void) {
+  int pid, nice;
+  return setnice(pid, nice);
+}

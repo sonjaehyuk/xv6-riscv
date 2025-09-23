@@ -146,6 +146,7 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->nice = 20; // nice 기본값
   return p;
 }
 
@@ -691,4 +692,26 @@ int getnproc(void) {
       num += 1;
   }
   return num;
+}
+
+// getnice: return the nice value of a process
+int getnice(int pid) {
+  struct proc *p = myproc();
+  if(p==0) return -1;
+
+  // 읽기이므로 락 필요 없음
+  int nice = p->nice;
+  return nice;
+}
+
+// setnice: set the nice value of a process
+int setnice(int pid, int nice) {
+  struct proc *p = myproc();
+  if(p==0) return -1;
+  if(nice < 0 || nice > 40) return -2;
+
+  acquire(&p->lock);
+  p->nice = nice;
+  release(&p->lock);
+  return 0;
 }

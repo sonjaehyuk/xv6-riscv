@@ -128,6 +128,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_getnp]   sys_getnp,
+[SYS_getnice] sys_getnice,
+[SYS_setnice] sys_setnice,
 };
 
 void
