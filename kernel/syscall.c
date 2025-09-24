@@ -102,6 +102,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_getnp(void);
+extern uint64 sys_getnice(void);
+extern uint64 sys_setnice(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.

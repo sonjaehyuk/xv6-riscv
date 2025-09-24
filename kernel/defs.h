@@ -103,7 +103,7 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 int             getnproc(void);
 int             getnice(int pid);
-int             setnice(int pid);
+int             setnice(int pid, int value);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

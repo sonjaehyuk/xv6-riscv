@@ -696,22 +696,34 @@ int getnproc(void) {
 
 // getnice: return the nice value of a process
 int getnice(int pid) {
-  struct proc *p = myproc();
-  if(p==0) return -1;
-
-  // 읽기이므로 락 필요 없음
-  int nice = p->nice;
-  return nice;
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->pid == pid){
+  		int nice = p->nice;
+	    release(&p->lock);
+		return nice;
+    }
+    release(&p->lock);
+  }
+  return -1;
 }
 
 // setnice: set the nice value of a process
 int setnice(int pid, int nice) {
-  struct proc *p = myproc();
-  if(p==0) return -1;
-  if(nice < 0 || nice > 40) return -2;
-
-  acquire(&p->lock);
-  p->nice = nice;
-  release(&p->lock);
-  return 0;
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->pid == pid){
+	  if(nice < 0 || nice > 40) {
+        release(&p->lock);
+		return -2;
+	  }
+  	  p->nice = nice;
+      release(&p->lock);
+	  return 0;
+    }
+    release(&p->lock);
+  }
+  return -1;
 }
