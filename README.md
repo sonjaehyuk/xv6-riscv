@@ -136,6 +136,11 @@ exec는 프로세스 변환 과정 중 실패할 것을 대비해 변환 과정�
 4. 일반적인 셸 스크립트에서 지원하는 `#!/bin/bash` 기능을 xv6에서 지원하도록 수정하시오.
 5. 커널에 대한 주소 공간 배치 무작위화를 구현하시오.
 
+## 챕터 4
+
+Risc V에서 Trap은 페이지 테이블 전환, 스택 전환, 레지스터 저장을 자동으로 수행하지 않는다.
+그러므로 커널 코드가 올바르게 작성되지 않을 경우 특권 명령이 사용자 모드에서 작동할 위험이 있다.
+
 ```text
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
