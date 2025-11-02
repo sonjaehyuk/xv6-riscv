@@ -152,6 +152,29 @@ xv6에는 2가지 종류의 lock이 있다.
 * spinlock: 짧은 대기 시간에 사용
 * sleep lock: lock을 길게 가져가야 하는 상황에 사용
 
+## 챕터 7
+
+문맥 교환에 있어 고려해야 할 것들
+
+* 어떻게 한 프로세스에서 다른 프로세스로 전환할 것인가?
+* 어떻게 투명하게 사용자 프로세스간 전환을 강제할 것인가?
+* 경쟁 상태를 방지하기 위해 lock 계획이 필수이다.
+* 프로세스의 메모리와 기타 자원은 반드시 프로세스가 끝났을 때 해제되어야 한다.
+* 다중 코어 머신은 커널 코드가 올바르게 영향을 미치게 하기 위해 반드시 어느 프로세스가 실행되고 있는지 반드시 알아야 한다.
+
+XV6는 각 CPU를 나타내는 cpu 구조체를 가지고 있다.
+
+* mycpu()는 현재 cpu 구조체를 반환한다.
+* myproc()은 현재 실행 중인 프로세스를 반환한다.
+* mycpu와 myproc은 잠시 인터럽트를 비활성화한다.
+
+sleep과 wakeup은 바쁜 대기를 최소화할 수 있다. 이들은 proc 구조체의 state를 바꾸는 방법으로 작동한다.
+sleep과 wakeup은 pipe의 봉쇄, 프로세스간 exit과 wait에 사용된다.
+
+자식 프로세스의 부모를 바꾸는 과정에서는 wait_lock이 사용된다. 파양한 부모와 입양한 부모에 lock을 2개 거는 것보다 효율적이기 때문이다.
+
+XV6는 라운드 로빈 스케줄러를 사용한다.
+
 ```text
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,

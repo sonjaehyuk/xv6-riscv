@@ -490,7 +490,7 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
-  sched();
+  sched(); // 현재 문맥을 p->context에 저장
   release(&p->lock);
 }
 
