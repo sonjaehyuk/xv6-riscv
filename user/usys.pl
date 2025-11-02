@@ -37,3 +37,5 @@ entry("sbrk");
 entry("sleep");
 entry("uptime");
 entry("getnp");
+entry("getnice");
+entry("setnice");
