@@ -141,6 +141,17 @@ exec는 프로세스 변환 과정 중 실패할 것을 대비해 변환 과정�
 Risc V에서 Trap은 페이지 테이블 전환, 스택 전환, 레지스터 저장을 자동으로 수행하지 않는다.
 그러므로 커널 코드가 올바르게 작성되지 않을 경우 특권 명령이 사용자 모드에서 작동할 위험이 있다.
 
+## 챕터 6
+
+다중 프로세서, 인터럽트에 의해 두 코드에 동시에 도달할 가능성이 있으며, 동시성 제어를 통해 이를 관리해야 한다.
+
+Lock은 동시성 제어의 가장 유명한 방법이다.
+
+xv6에는 2가지 종류의 lock이 있다.
+
+* spinlock: 짧은 대기 시간에 사용
+* sleep lock: lock을 길게 가져가야 하는 상황에 사용
+
 ```text
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
