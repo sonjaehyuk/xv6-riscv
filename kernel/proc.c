@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 
+int sched_epoch = 1;
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -147,6 +149,8 @@ found:
   p->context.sp = p->kstack + PGSIZE;
 
   p->nice = 20; // nice 기본값
+  p->last_epoch = 0;     // 아직 어떤 에폭에서도 첫 실행 기록 없음
+  p->slice_remain = 0;   // 디스패치 시 설정
   return p;
 }
 
@@ -423,37 +427,31 @@ scheduler(void)
   struct cpu *c = mycpu();
 
   c->proc = 0;
-  for(;;){
-    // The most recent process to run may have had interrupts
-    // turned off; enable them to avoid a deadlock if all
-    // processes are waiting. Then turn them back off
-    // to avoid a possible race between an interrupt
-    // and wfi.
+  for (;;) {
     intr_on();
-    intr_off();
 
-    int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+    // 이번 epoch에서 아직 한 번도 스케줄되지 않은 RUNNABLE들만 대상으로
+    // 가장 큰 nice를 가진 프로세스를 고른다. p는 lock 걸린 상태
+    p = pick_next_proc_in_epoch();
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
+    if (p == 0) { // 이번 epoch에서 할당할 대상이 남지 않음
+      if (exists_any_runnable()) { // RUNNABLE이 있을 때에만 epoch를 올려서 epoch 폭등 방지
+        sched_epoch++;
+        continue;
       }
-      release(&p->lock);
+      continue;
     }
-    if(found == 0) {
-      // nothing to run; stop running on this core until an interrupt.
-      asm volatile("wfi");
-    }
+
+    p->state = RUNNING;
+    c->proc = p;
+    p->slice_remain = (p->nice > 0) ? p->nice : 1; // 이번 실행에서의 타임슬라이스
+    // 이번 epoch에서 최소 1회 실행을 표기
+    p->last_epoch = sched_epoch;
+    swtch(&c->context, &p->context);
+
+    // 프로세스가 CPU 빼앗긴 이후
+    c->proc = 0;
+    release(&p->lock);
   }
 }
 
@@ -726,4 +724,66 @@ int setnice(int pid, int nice) {
     release(&p->lock);
   }
   return -1;
+}
+
+struct proc*
+pick_next_proc_in_epoch(void)
+{
+  struct proc *p, *best = 0;
+
+  for (p = proc; p < &proc[NPROC]; p++) {                       // 모든 프로세스 목록을 순환하며
+    acquire(&p->lock);
+    if (p->state == RUNNABLE && p->last_epoch != sched_epoch) { // 실행 가능하고 last_epoch가 현재 epoch가 아닌, 즉 현재 epoch에서 실행된 적 없으면
+      // 동일 nice간 우선 순위 선정이 필요하면: (p->nice == best->nice && p->pid < best->pid)
+      if (best == 0 || p->nice > best->nice) {
+        if (best) release(&best->lock);                         // 이전에 잡아두었던 best의 락을 풀어준다
+        best = p;                                               // best 교체(lock 걸린 상태)
+        continue;
+      }
+    }
+    release(&p->lock);                                          // best 아니였으면 그냥 풀어주기
+  }
+  return best;                                                  // Optional[best_process_for_next_schedle]
+}
+
+// RUNNABLE 이 하나라도 존재하는지(전역 확인)
+int
+exists_any_runnable(void)
+{
+  struct proc *p;
+  int found = 0;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state == RUNNABLE) {
+      found = 1;
+      release(&p->lock);
+      break;
+    }
+    release(&p->lock);
+  }
+  return found;
+}
+
+
+// slice_remain은 다음 CPU 할당 때 스케줄러가 새 슬라이스로 채워준다.
+void
+yield_if_timeslice_expired(void)
+{
+  struct proc *p = myproc();
+  if (p == 0)
+    return;
+
+  // RUNNING이 아닐 땐 타임슬라이스를 소모하거나 스케줄러에 넘길 이유가 없다.
+  if (p->state != RUNNING)
+    return;
+
+  acquire(&p->lock);
+  if (p->slice_remain > 0)
+    p->slice_remain--;
+
+  if (p->slice_remain <= 0) {
+    p->state = RUNNABLE;
+    sched();
+  }
+  release(&p->lock);
 }

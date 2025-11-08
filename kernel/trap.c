@@ -82,7 +82,8 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)
-    yield();
+    yield_if_timeslice_expired();
+    //yield();
 
   prepare_return();
 

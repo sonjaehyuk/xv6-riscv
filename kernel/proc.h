@@ -107,4 +107,7 @@ struct proc {
 
   // nice
   int nice;
+
+  int last_epoch;     // 마지막으로 그 라운드에서 첫 실행으로 표기된 epoch 번호
+  int slice_remain;   // 현재 타임슬라이스 남은 틱 수
 };

@@ -104,6 +104,10 @@ void            procdump(void);
 int             getnproc(void);
 int             getnice(int pid);
 int             setnice(int pid, int value);
+void            yield_if_timeslice_expired(void);
+struct proc*    pick_next_proc_in_epoch(void);
+int             exists_unserved_runnable_in_epoch(void);
+int             exists_any_runnable(void);
 
 // swtch.S
 void            swtch(struct context*, struct context*);
